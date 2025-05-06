@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:latest
+    command: >
+      bash -c "
+        docker-entrypoint.sh postgres &
+
+        sleep 5 &&
+        psql -U postgres -c 'CREATE DATABASE parqueaderos_db' &&
+
+        sleep 5 &&
+        psql -U postgres -d parqueaderos_db -c 'CREATE EXTENSION IF NOT EXISTS postgis' &&
+
+        # Crear tabla de municipios
+        psql -U postgres -d parqueaderos_db -c \"
+          CREATE TABLE IF NOT EXISTS municipios (
+            id SERIAL PRIMARY KEY,
+            nombre VARCHAR(255) NOT NULL,
+            coordenadas GEOGRAPHY(POINT, 4326) NOT NULL
+          );
+        \" &&
+
+        # Crear tabla de aparcaderos
+        psql -U postgres -d parqueaderos_db -c \"
+          CREATE TABLE IF NOT EXISTS aparcaderos (
+            id SERIAL PRIMARY KEY,
+            municipio VARCHAR(255) NOT NULL,
+            coordenadas GEOGRAPHY(POINT, 4326) NOT NULL,
+            capacidad_maxima INT NOT NULL
+          );
+        \" &&
+
+        # Crear tabla de buses con coordenadas
+        psql -U postgres -d parqueaderos_db -c \"
+          CREATE TABLE IF NOT EXISTS buses (
+            id SERIAL PRIMARY KEY,
+            placa VARCHAR(20) UNIQUE NOT NULL,
+            coordenadas GEOGRAPHY(POINT, 4326),
+            destino VARCHAR(255)
+          );
+        \" &&
+
+        # Crear tabla de registros
+        psql -U postgres -d parqueaderos_db -c \"
+          CREATE TABLE IF NOT EXISTS registros (
+            id SERIAL PRIMARY KEY,
+            bus_id INTEGER REFERENCES buses(id),
+            aparcadero_id INTEGER REFERENCES aparcaderos(id),
+            hora_llegada TIMESTAMP NOT NULL,
+            hora_salida TIMESTAMP,
+            destino VARCHAR(255),
+            CHECK (hora_salida IS NULL OR hora_salida > hora_llegada)
+          );
+        \" &&
+
+        # Insertar datos en municipios
+        psql -U postgres -d parqueaderos_db -c \"
+          INSERT INTO municipios (nombre, coordenadas) VALUES
+          ('Bogotá', ST_SetSRID(ST_MakePoint(-74.0721, 4.7110), 4326)),
+          ('Chocontá', ST_SetSRID(ST_MakePoint(-73.687044, 5.146678), 4326)),
+          ('Tibiritá', ST_SetSRID(ST_MakePoint(-73.504577, 5.051490), 4326)),
+          ('Jerusalén', ST_SetSRID(ST_MakePoint(-74.695855, 4.562677), 4326)),
+          ('Ricaurte', ST_SetSRID(ST_MakePoint(-74.767717, 4.282114), 4326)),
+          ('Puerto Salgar', ST_SetSRID(ST_MakePoint(-74.654130, 5.466157), 4326)),
+          ('La Vega', ST_SetSRID(ST_MakePoint(-74.338211, 4.992574), 4326)),
+          ('Útica', ST_SetSRID(ST_MakePoint(-74.481177, 5.185815), 4326));
+        \" &&
+
+        # Insertar datos en aparcaderos
+        psql -U postgres -d parqueaderos_db -c \"
+          INSERT INTO aparcaderos (municipio, coordenadas, capacidad_maxima) VALUES
+          ('Bogotá', ST_SetSRID(ST_MakePoint(-74.0721, 4.7110), 4326), 10),
+          ('Chocontá', ST_SetSRID(ST_MakePoint(-73.687044, 5.146678), 4326), 2),
+          ('Tibiritá', ST_SetSRID(ST_MakePoint(-73.504577, 5.051490), 4326), 3),
+          ('Jerusalén', ST_SetSRID(ST_MakePoint(-74.695855, 4.562677), 4326), 2),
+          ('Ricaurte', ST_SetSRID(ST_MakePoint(-74.767717, 4.282114), 4326), 3),
+          ('Puerto Salgar', ST_SetSRID(ST_MakePoint(-74.654130, 5.466157), 4326), 2),
+          ('La Vega', ST_SetSRID(ST_MakePoint(-74.338211, 4.992574), 4326), 3),
+          ('Útica', ST_SetSRID(ST_MakePoint(-74.481177, 5.185815), 4326), 2);
+        \" &&
+
+        # Insertar buses con coordenadas individuales (en Bogotá, por ejemplo)
+        psql -U postgres -d parqueaderos_db -c \"
+          INSERT INTO buses (placa, coordenadas, destino) VALUES
+          ('ABC123', ST_SetSRID(ST_MakePoint(-74.0720, 4.7111), 4326), 'N/A'),
+          ('DEF456', ST_SetSRID(ST_MakePoint(-74.0719, 4.7112), 4326), 'N/A'),
+          ('GHI789', ST_SetSRID(ST_MakePoint(-74.0722, 4.7113), 4326), 'N/A'),
+          ('JKL012', ST_SetSRID(ST_MakePoint(-74.0723, 4.7114), 4326), 'N/A'),
+          ('MNO345', ST_SetSRID(ST_MakePoint(-74.0724, 4.7115), 4326), 'N/A'),
+          ('PQR678', ST_SetSRID(ST_MakePoint(-74.0725, 4.7116), 4326), 'N/A'),
+          ('STU901', ST_SetSRID(ST_MakePoint(-74.0726, 4.7117), 4326), 'N/A');
+        \" &&
+
+        # Insertar registros de llegada
+        psql -U postgres -d parqueaderos_db -c \"
+          INSERT INTO registros (bus_id, aparcadero_id, hora_llegada, destino) VALUES
+            (1, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '10 minutes', 'Ricaurte'),
+            (2, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '9 minutes', 'La Vega'),
+            (3, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '8 minutes', 'Chocontá'),
+            (4, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '7 minutes', 'Tibiritá'),
+            (5, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '6 minutes', 'Jerusalén'),
+            (6, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '5 minutes', 'Puerto Salgar'),
+            (7, (SELECT id FROM aparcaderos WHERE municipio = 'Bogotá'), NOW() - INTERVAL '4 minutes', 'Bogotá');
+        \" &&
+
+        tail -f /dev/null
+      "
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
