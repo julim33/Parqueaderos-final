@@ -1,0 +1,4 @@
+/* Fix para los iconos de Leaflet */
+.leaflet-container {
+  background: #f9f9f9;
+}

@@ -1,0 +1,130 @@
+/* Estilos generales */
+.registros-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 28px;
+  }
+  
+  .cargando {
+    text-align: center;
+    font-size: 18px;
+    color: #3498db;
+    margin-top: 50px;
+  }
+  
+  /* Filtros */
+  .filtros-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .filtro-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .filtro-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #34495e;
+  }
+  
+  .filtro-group select, 
+  .filtro-group input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .btn-limpiar {
+    grid-column: 1 / -1;
+    padding: 10px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-limpiar:hover {
+    background-color: #c0392b;
+  }
+  
+  /* Tabla */
+  .table-wrapper {
+    margin: 20px 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .fl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .fl-table th, .fl-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .fl-table th {
+    background-color: #3498db;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  
+  .fl-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+  
+  .fl-table tr:hover {
+    background-color: #e8f4fc;
+  }
+  
+  .sin-resultados {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 20px;
+  }
+  
+  /* Resumen */
+  .resumen {
+    text-align: right;
+    margin-top: 10px;
+    font-style: italic;
+    color: #7f8c8d;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .filtros-container {
+      grid-template-columns: 1fr;
+    }
+    
+    .fl-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }
