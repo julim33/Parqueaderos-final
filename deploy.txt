@@ -1,0 +1,5 @@
+docker-compose up --build
+
+uvicorn main:app --reload
+
+npm start
