@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Aparcaderos.css';
 
-const Aparcaderos = () => {
+const Aparcaderos = ({ onAparcaderoClick, selectedAparcadero }) => {
   const [aparcaderos, setAparcaderos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
@@ -18,10 +18,8 @@ const Aparcaderos = () => {
       });
   }, []);
 
-  // Función para formatear las coordenadas
   const formatCoordenadas = (coordenadas) => {
     if (!coordenadas) return 'No especificadas';
-    
     try {
       const parsed = JSON.parse(coordenadas);
       if (parsed.type === 'Point' && parsed.coordinates) {
@@ -40,18 +38,25 @@ const Aparcaderos = () => {
 
   return (
     <div className="aparcaderos-container">
-      <h2 className="titulo-aparcaderos">Terminales de Transporte</h2>
       
       <div className="grid-aparcaderos">
         {aparcaderos.map(aparcadero => (
-          <div key={aparcadero.id} className="tarjeta-aparcadero">
+          <div
+            key={aparcadero.id}
+            className={`tarjeta-aparcadero ${selectedAparcadero?.id === aparcadero.id ? 'seleccionado' : ''}`}
+            onClick={() => {
+              if (typeof onAparcaderoClick === 'function') {
+                onAparcaderoClick(aparcadero);
+              }
+            }}
+          >
             <div className="imagen-container">
               <img 
                 src={`/img/aparcaderos/${aparcadero.id}.jpg`} 
                 alt={`Terminal ${aparcadero.municipio}`}
                 className="imagen-aparcadero"
                 onError={(e) => {
-                  e.target.src = '/img/aparcaderos/default.jpg';
+                  e.target.src = '/img/aparcaderos/default.jpg'; // Imagen por defecto si no existe
                 }}
               />
               <div className="capacidad-badge">
@@ -61,21 +66,18 @@ const Aparcaderos = () => {
             
             <div className="info-aparcadero">
               <h3>{aparcadero.municipio}</h3>
-              
               <div className="detalle-aparcadero coordenadas">
                 <span className="etiqueta">Ubicación:</span>
                 <span className="valor">
                   {formatCoordenadas(aparcadero.coordenadas)}
                 </span>
               </div>
-              
               {aparcadero.direccion && (
                 <div className="detalle-aparcadero">
                   <span className="etiqueta">Dirección:</span>
                   <span className="valor">{aparcadero.direccion}</span>
                 </div>
               )}
-              
               {aparcadero.telefono_contacto && (
                 <div className="detalle-aparcadero">
                   <span className="etiqueta">Contacto:</span>

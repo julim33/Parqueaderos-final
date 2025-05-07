@@ -84,13 +84,13 @@ services:
         # Insertar buses con coordenadas individuales (en Bogotá, por ejemplo)
         psql -U postgres -d parqueaderos_db -c \"
           INSERT INTO buses (placa, coordenadas, destino) VALUES
-          ('ABC123', ST_SetSRID(ST_MakePoint(-74.0720, 4.7111), 4326), 'N/A'),
-          ('DEF456', ST_SetSRID(ST_MakePoint(-74.0719, 4.7112), 4326), 'N/A'),
-          ('GHI789', ST_SetSRID(ST_MakePoint(-74.0722, 4.7113), 4326), 'N/A'),
-          ('JKL012', ST_SetSRID(ST_MakePoint(-74.0723, 4.7114), 4326), 'N/A'),
-          ('MNO345', ST_SetSRID(ST_MakePoint(-74.0724, 4.7115), 4326), 'N/A'),
-          ('PQR678', ST_SetSRID(ST_MakePoint(-74.0725, 4.7116), 4326), 'N/A'),
-          ('STU901', ST_SetSRID(ST_MakePoint(-74.0726, 4.7117), 4326), 'N/A');
+          ('SSP978', ST_SetSRID(ST_MakePoint(-74.0720, 4.7111), 4326), 'N/A'),
+          ('WOL682', ST_SetSRID(ST_MakePoint(-74.0719, 4.7112), 4326), 'N/A'),
+          ('SIT136', ST_SetSRID(ST_MakePoint(-74.0722, 4.7113), 4326), 'N/A'),
+          ('TKH895', ST_SetSRID(ST_MakePoint(-74.0723, 4.7114), 4326), 'N/A'),
+          ('TLP105', ST_SetSRID(ST_MakePoint(-74.0724, 4.7115), 4326), 'N/A'),
+          ('WNZ190', ST_SetSRID(ST_MakePoint(-74.0725, 4.7116), 4326), 'N/A'),
+          ('WON871', ST_SetSRID(ST_MakePoint(-74.0726, 4.7117), 4326), 'N/A');
         \" &&
 
         # Insertar registros de llegada

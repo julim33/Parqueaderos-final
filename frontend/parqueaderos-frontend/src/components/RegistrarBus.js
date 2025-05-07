@@ -103,7 +103,6 @@ const RegistrarBus = () => {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Registrar Bus</h2>
       
       {mensaje.texto && (
         <div style={{

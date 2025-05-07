@@ -157,25 +157,37 @@ def registrar_bus(registro: Registro):
             raise HTTPException(status_code=404, detail="Bus no encontrado")
 
         # 2. Verificar que el aparcadero existe
-        cursor.execute("SELECT id FROM aparcaderos WHERE id = %s", (registro.aparcadero_id,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT id, capacidad_maxima FROM aparcaderos WHERE id = %s", (registro.aparcadero_id,))
+        aparcadero = cursor.fetchone()
+        if not aparcadero:
             raise HTTPException(status_code=404, detail="Aparcadero no encontrado")
 
-        # 3. Obtener coordenadas del bus (origen)
+        capacidad_maxima = aparcadero[1]
+        
+        # 3. Verificar la capacidad actual del aparcadero
         cursor.execute("""
+            SELECT COUNT(*) FROM registros WHERE aparcadero_id = %s AND hora_salida IS NULL
+        """, (registro.aparcadero_id,))
+        capacidad_actual = cursor.fetchone()[0]
+        
+        if capacidad_actual >= capacidad_maxima:
+            raise HTTPException(status_code=400, detail="Capacidad máxima del aparcadero alcanzada")
+        
+        # 4. Obtener coordenadas del bus (origen)
+        cursor.execute(""" 
             SELECT ST_X(coordenadas::geometry), ST_Y(coordenadas::geometry)
             FROM buses WHERE id = %s
         """, (registro.bus_id,))
         bus_coord = cursor.fetchone()
 
-        # 4. Obtener coordenadas del aparcadero (destino)
+        # 5. Obtener coordenadas del aparcadero (destino)
         cursor.execute("""
             SELECT ST_X(coordenadas::geometry), ST_Y(coordenadas::geometry), coordenadas
             FROM aparcaderos WHERE id = %s
         """, (registro.aparcadero_id,))
         ap_coord = cursor.fetchone()
 
-        # 5. Calcular distancia y tiempo estimado
+        # 6. Calcular distancia y tiempo estimado
         distancia_km = calcular_distancia_ruta(
             bus_coord[1], bus_coord[0],  # lat, lon del bus
             ap_coord[1], ap_coord[0]     # lat, lon del aparcadero
@@ -183,7 +195,7 @@ def registrar_bus(registro: Registro):
         tiempo_horas = distancia_km / 60  # 60 km/h velocidad promedio
         hora_llegada = datetime.utcnow() + timedelta(hours=tiempo_horas)
 
-        # 6. Formatear hora de salida para PostgreSQL
+        # 7. Formatear hora de salida para PostgreSQL
         hora_salida_sql = None
         if registro.hora_salida:
             try:
@@ -192,7 +204,7 @@ def registrar_bus(registro: Registro):
                 logger.error(f"Error al parsear hora_salida: {e}")
                 raise HTTPException(status_code=400, detail="Formato de hora de salida inválido")
 
-        # 7. Actualizar ubicación del bus (moverlo al aparcadero)
+        # 8. Actualizar ubicación del bus (moverlo al aparcadero)
         cursor.execute("""
             UPDATE buses 
             SET coordenadas = %s,
@@ -200,7 +212,7 @@ def registrar_bus(registro: Registro):
             WHERE id = %s
         """, (ap_coord[2], registro.destino, registro.bus_id))
 
-        # 8. Registrar la llegada
+        # 9. Registrar la llegada
         cursor.execute("""
             INSERT INTO registros 
             (bus_id, aparcadero_id, hora_llegada, hora_salida, destino) 
@@ -234,6 +246,7 @@ def registrar_bus(registro: Registro):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
+
 
 @app.put("/buses/{bus_id}/ubicacion")
 def actualizar_ubicacion(bus_id: int, ubicacion: UbicacionBus):

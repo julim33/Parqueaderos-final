@@ -1,132 +1,213 @@
-/* Estilos generales */
+/* ===== ESTILOS GENERALES ===== */
 .aparcaderos-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  
-  .titulo-aparcaderos {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 30px;
-    font-size: 2.2rem;
-    position: relative;
-  }
-  
-  .titulo-aparcaderos::after {
-    content: '';
-    display: block;
-    width: 80px;
-    height: 4px;
-    background: #3498db;
-    margin: 10px auto;
-    border-radius: 2px;
-  }
-  
-  /* Grid de terminales */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.titulo-aparcaderos {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 2.2rem;
+  position: relative;
+}
+
+.titulo-aparcaderos::after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: #3498db;
+  margin: 10px auto;
+  border-radius: 2px;
+}
+
+.cargando {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+/* ===== MODO GRID ===== */
+.grid-aparcaderos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 10px;
+}
+
+.tarjeta-aparcadero {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tarjeta-aparcadero:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.imagen-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.imagen-aparcadero {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.tarjeta-aparcadero:hover .imagen-aparcadero {
+  transform: scale(1.05);
+}
+
+.capacidad-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(52, 152, 219, 0.9);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.info-aparcadero {
+  padding: 20px;
+}
+
+.info-aparcadero h3 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 1.4rem;
+}
+
+.detalle-aparcadero {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.detalle-aparcadero.coordenadas {
+  font-family: monospace;
+}
+
+.etiqueta {
+  font-weight: bold;
+  color: #7f8c8d;
+  min-width: 80px;
+  margin-right: 10px;
+}
+
+.valor {
+  color: #34495e;
+  flex: 1;
+  word-break: break-word;
+}
+
+/* ===== MODO SLIDER ===== */
+.slider-item {
+  padding: 0 10px;
+  height: 100%;
+}
+
+.tarjeta-slider {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.tarjeta-slider:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.tarjeta-slider.selected {
+  border: 2px solid #3498db;
+}
+
+.imagen-slider-container {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.imagen-slider {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.tarjeta-slider:hover .imagen-slider {
+  transform: scale(1.05);
+}
+
+.capacidad-slider {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(52, 152, 219, 0.9);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.info-slider {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-slider h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.coordenadas-slider {
+  font-family: monospace;
+  font-size: 0.8rem;
+  margin-top: auto;
+}
+
+.coordenadas-slider span:first-child {
+  font-weight: bold;
+  color: #7f8c8d;
+  margin-right: 5px;
+}
+
+.coordenadas-slider span:last-child {
+  color: #34495e;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
   .grid-aparcaderos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px;
-    padding: 10px;
+    grid-template-columns: 1fr;
   }
   
-  /* Tarjeta individual */
-  .tarjeta-aparcadero {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .tarjeta-aparcadero:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Estilos de la imagen */
   .imagen-container {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
+    height: 180px;
   }
-  
-  .imagen-aparcadero {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
+
+  .imagen-slider-container {
+    height: 120px;
   }
-  
-  .tarjeta-aparcadero:hover .imagen-aparcadero {
-    transform: scale(1.05);
-  }
-  
-  .capacidad-badge {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: rgba(52, 152, 219, 0.9);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-  
-  /* Información del terminal */
-  .info-aparcadero {
-    padding: 20px;
-  }
-  
-  .info-aparcadero h3 {
-    margin: 0 0 15px 0;
-    color: #2c3e50;
-    font-size: 1.4rem;
-  }
-  
-  .detalle-aparcadero {
-    margin-bottom: 10px;
-    display: flex;
-  }
-  
-  .detalle-aparcadero.coordenadas {
-    font-family: monospace;
-  }
-  
-  .etiqueta {
-    font-weight: bold;
-    color: #7f8c8d;
-    min-width: 80px;
-    margin-right: 10px;
-  }
-  
-  .valor {
-    color: #34495e;
-    flex: 1;
-    word-break: break-word;
-  }
-  
-  /* Estado de carga */
-  .cargando {
-    text-align: center;
-    padding: 50px;
-    font-size: 1.2rem;
-    color: #7f8c8d;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .grid-aparcaderos {
-      grid-template-columns: 1fr;
-    }
-    
-    .tarjeta-aparcadero {
-      max-width: 100%;
-    }
-    
-    .imagen-container {
-      height: 180px;
-    }
-  }
+}

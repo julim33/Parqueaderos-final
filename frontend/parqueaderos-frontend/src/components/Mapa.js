@@ -1,99 +1,163 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import axios from 'axios';
-import './Aparcaderos.css';
+import 'leaflet/dist/leaflet.css';
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 
-const Aparcaderos = ({ onAparcaderoClick }) => {
+const Mapa = ({ selectedAparcadero, onAparcaderoClick }) => {
   const [aparcaderos, setAparcaderos] = useState([]);
-  const [cargando, setCargando] = useState(true);
+  const [buses, setBuses] = useState([]);
+  const [mostrarAparcaderos, setMostrarAparcaderos] = useState(true);  // Nuevo estado para alternar la vista
+  const mapRef = useRef();
 
+  // Obtener los aparcaderos
   useEffect(() => {
     axios.get('http://127.0.0.1:8000/aparcamientos')
       .then(response => {
         setAparcaderos(response.data);
-        setCargando(false);
       })
       .catch(error => {
-        console.error('Hubo un error al obtener los aparcamientos!', error);
-        setCargando(false);
+        console.error('Error al obtener los aparcaderos:', error);
       });
   }, []);
 
-  const formatCoordenadas = (coordenadas) => {
-    if (!coordenadas) return 'No especificadas';
-    
-    try {
-      const parsed = JSON.parse(coordenadas);
-      if (parsed.type === 'Point' && parsed.coordinates) {
-        const [lon, lat] = parsed.coordinates;
-        return `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
-      }
-      return 'Formato no válido';
-    } catch (e) {
-      return 'Formato inválido';
-    }
-  };
+  // Obtener los buses
+  useEffect(() => {
+    axios.get('http://127.0.0.1:8000/buses')
+      .then(response => {
+        setBuses(response.data);
+      })
+      .catch(error => {
+        console.error('Error al obtener los buses:', error);
+      });
+  }, []);
 
-  const handleAparcaderoClick = (aparcadero) => {
-    try {
-      const coordenadas = JSON.parse(aparcadero.coordenadas);
-      const [lon, lat] = coordenadas.coordinates;
-      
-      if (onAparcaderoClick) {
-        onAparcaderoClick({
-          id: aparcadero.id,
-          center: [lat, lon],
-          zoom: 16
-        });
-      }
-    } catch (e) {
-      console.error("Error al procesar coordenadas:", e);
-    }
-  };
+  const customMarkerIcon = new L.Icon({
+    iconUrl: markerIconUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
 
-  if (cargando) {
-    return <div className="cargando">Cargando terminales...</div>;
-  }
+  // Icono rojo para los buses
+  const busMarkerIcon = new L.Icon({
+    iconUrl: '/img/rojo.png', 
+    iconSize: [41, 41],
+    iconAnchor: [41, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  // Función para asociar buses a aparcaderos por coordenadas
+  const getBusesForAparcadero = (aparcadero) => {
+    const coordenadasAparcadero = JSON.parse(aparcadero.coordenadas);
+    const [lonAparcadero, latAparcadero] = coordenadasAparcadero.coordinates;
+
+    // Filtra los buses que están en el mismo aparcadero (coordenadas coinciden)
+    return buses.filter(bus => {
+      const coordenadasBus = JSON.parse(bus.coordenadas);
+      const [lonBus, latBus] = coordenadasBus.coordinates;
+
+      // Comparar si las coordenadas coinciden
+      return lonAparcadero === lonBus && latAparcadero === latBus;
+    });
+  };
 
   return (
-    <div className="aparcaderos-container">
-      <h2 className="titulo-aparcaderos">Terminales de Transporte</h2>
-      
-      <div className="grid-aparcaderos">
-        {aparcaderos.map(aparcadero => (
-          <div 
-            key={aparcadero.id} 
-            className="tarjeta-aparcadero"
-            onClick={() => handleAparcaderoClick(aparcadero)}
-          >
-            <div className="imagen-container">
-              <img 
-                src={`/img/aparcaderos/${aparcadero.id}.jpg`} 
-                alt={`Terminal ${aparcadero.municipio}`}
-                className="imagen-aparcadero"
-                onError={(e) => {
-                  e.target.src = '/img/aparcaderos/default.jpg';
-                }}
-              />
-              <div className="capacidad-badge">
-                {aparcadero.capacidad_maxima} buses
-              </div>
-            </div>
-            
-            <div className="info-aparcadero">
-              <h3>{aparcadero.municipio}</h3>
-              
-              <div className="detalle-aparcadero coordenadas">
-                <span className="etiqueta">Ubicación:</span>
-                <span className="valor">
-                  {formatCoordenadas(aparcadero.coordenadas)}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="mapa-container">
+      <div style={{ marginBottom: '10px' }}>
+        {/* Botón para alternar entre la vista de aparcaderos y la de buses */}
+        <button onClick={() => setMostrarAparcaderos(!mostrarAparcaderos)}>
+          {mostrarAparcaderos ? 'Ver solo Buses' : 'Ver Aparcaderos y Buses'}
+        </button>
       </div>
+
+      <MapContainer
+        center={[4.60971, -74.08175]}  // Posición inicial del mapa
+        zoom={8}  // Zoom inicial
+        style={{ height: "500px", width: "100%" }}
+        ref={mapRef}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+
+        {/* Marcadores de aparcaderos */}
+        {mostrarAparcaderos && aparcaderos.map(aparcadero => {
+          try {
+            const coordenadas = JSON.parse(aparcadero.coordenadas);
+            const [lon, lat] = coordenadas.coordinates;
+
+            // Obtener los buses asociados a este aparcadero
+            const busesAsociados = getBusesForAparcadero(aparcadero);
+
+            // Calcular la capacidad actual de los aparcaderos
+            const capacidadActual = busesAsociados.length;
+
+            return (
+              <Marker 
+                key={aparcadero.id} 
+                position={[lat, lon]} 
+                icon={customMarkerIcon}
+                eventHandlers={{
+                  click: () => onAparcaderoClick({
+                    id: aparcadero.id,
+                    center: [lat, lon],
+                    zoom: 16
+                  })
+                }}
+              >
+                <Popup>
+                  <strong>{aparcadero.municipio}</strong><br />
+                  Capacidad Máxima: {aparcadero.capacidad_maxima}<br />
+                  Capacidad Actual: {capacidadActual} <br />
+                  <u>Buses presentes:</u>
+                  <ul>
+                    {busesAsociados.length > 0 ? busesAsociados.map((bus, index) => (
+                      <li key={index}>
+                        Placa: {bus.placa || 'Desconocida'} - Destino: {bus.destino || 'N/A'}
+                      </li>
+                    )) : <li>No hay buses presentes.</li>}
+                  </ul>
+                </Popup>
+              </Marker>
+            );
+          } catch (e) {
+            console.error("Error al procesar coordenadas:", e);
+            return null;
+          }
+        })}
+
+        {/* Marcadores de buses */}
+        {!mostrarAparcaderos && buses.map(bus => {
+          try {
+            const coordenadasBus = JSON.parse(bus.coordenadas);
+            const [lon, lat] = coordenadasBus.coordinates;
+
+            return (
+              <Marker 
+                key={bus.id} 
+                position={[lat, lon]} 
+                icon={busMarkerIcon}  // Usamos el icono rojo para los buses
+              >
+                <Popup>
+                  <strong>Placa: {bus.placa}</strong><br />
+                  Destino: {bus.destino}<br />
+                </Popup>
+              </Marker>
+            );
+          } catch (e) {
+            console.error("Error al procesar coordenadas del bus:", e);
+            return null;
+          }
+        })}
+
+      </MapContainer>
     </div>
   );
 };
 
-export default Aparcaderos;
+export default Mapa;

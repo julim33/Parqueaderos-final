@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './Registros.css'; // Archivo CSS separado
+import './Registros.css'; // Asegúrate de tener este archivo con los estilos sugeridos
 
 const Registros = () => {
   const [registros, setRegistros] = useState([]);
@@ -13,6 +13,8 @@ const Registros = () => {
     fechaFin: ''
   });
   const [cargando, setCargando] = useState(true);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 10;
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -23,7 +25,7 @@ const Registros = () => {
           axios.get('http://127.0.0.1:8000/aparcamientos'),
           axios.get('http://127.0.0.1:8000/registros')
         ]);
-        
+
         setBuses(busesRes.data);
         setAparcaderos(aparcaderosRes.data);
         setRegistros(registrosRes.data);
@@ -43,6 +45,7 @@ const Registros = () => {
       ...prev,
       [name]: value
     }));
+    setPaginaActual(1); // Reiniciar a la primera página si cambian filtros
   };
 
   const limpiarFiltros = () => {
@@ -52,12 +55,13 @@ const Registros = () => {
       fechaInicio: '',
       fechaFin: ''
     });
+    setPaginaActual(1);
   };
 
   const registrosFiltrados = registros.filter(registro => {
     const cumpleBus = !filtros.bus || registro.bus_id === parseInt(filtros.bus);
     const cumpleAparcadero = !filtros.aparcadero || registro.aparcadero_id === parseInt(filtros.aparcadero);
-    
+
     let cumpleFecha = true;
     if (filtros.fechaInicio) {
       const fechaInicio = new Date(filtros.fechaInicio);
@@ -69,9 +73,22 @@ const Registros = () => {
       const fechaRegistro = new Date(registro.hora_llegada);
       cumpleFecha = cumpleFecha && fechaRegistro <= fechaFin;
     }
-    
+
     return cumpleBus && cumpleAparcadero && cumpleFecha;
   });
+
+  const totalPaginas = Math.ceil(registrosFiltrados.length / registrosPorPagina);
+
+  const registrosPaginados = registrosFiltrados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
 
   const getPlacaById = (id) => {
     const bus = buses.find(b => b.id === id);
@@ -95,8 +112,6 @@ const Registros = () => {
 
   return (
     <div className="registros-container">
-      <h2>Registro de Movimientos</h2>
-      
       <div className="filtros-container">
         <div className="filtro-group">
           <label htmlFor="bus">Filtrar por Bus:</label>
@@ -168,8 +183,8 @@ const Registros = () => {
             </tr>
           </thead>
           <tbody>
-            {registrosFiltrados.length > 0 ? (
-              registrosFiltrados.map(registro => (
+            {registrosPaginados.length > 0 ? (
+              registrosPaginados.map(registro => (
                 <tr key={registro.id}>
                   <td>{registro.id}</td>
                   <td>{getPlacaById(registro.bus_id)}</td>
@@ -190,8 +205,20 @@ const Registros = () => {
         </table>
       </div>
 
-      <div className="resumen">
-        <p>Total de registros: {registrosFiltrados.length}</p>
+      <div className="paginacion">
+        <button
+          onClick={() => cambiarPagina(paginaActual - 1)}
+          disabled={paginaActual === 1}
+        >
+          Anterior
+        </button>
+        <span>Página {paginaActual} de {totalPaginas}</span>
+        <button
+          onClick={() => cambiarPagina(paginaActual + 1)}
+          disabled={paginaActual === totalPaginas}
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );
